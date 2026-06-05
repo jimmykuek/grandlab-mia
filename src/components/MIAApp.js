@@ -117,60 +117,21 @@ const CopyIcon = () => (
 // ─── MIA AVATAR ─────────────────────────────────────────────────────────────
 function MIAAvatar({ size = 80, style = {} }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ borderRadius:"50%", display:"block", flexShrink:0, ...style }}>
-      <defs>
-        <radialGradient id="wbg"><stop offset="0%" stopColor="#1a1a0f"/><stop offset="100%" stopColor="#0d0d0d"/></radialGradient>
-        <radialGradient id="wsk" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fde8d8"/><stop offset="100%" stopColor="#f5cdb0"/></radialGradient>
-        <radialGradient id="wcL" cx="30%" cy="60%" r="40%"><stop offset="0%" stopColor="#f9a0b0" stopOpacity=".45"/><stop offset="100%" stopColor="#f9a0b0" stopOpacity="0"/></radialGradient>
-        <radialGradient id="wcR" cx="70%" cy="60%" r="40%"><stop offset="0%" stopColor="#f9a0b0" stopOpacity=".45"/><stop offset="100%" stopColor="#f9a0b0" stopOpacity="0"/></radialGradient>
-        <radialGradient id="whG" cx="50%" cy="0%" r="80%"><stop offset="0%" stopColor="#2a1a08"/><stop offset="100%" stopColor="#0d0800"/></radialGradient>
-        <linearGradient id="wsG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1c1c1c"/><stop offset="100%" stopColor="#080808"/></linearGradient>
-        <linearGradient id="wgS" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7a5010"/><stop offset="30%" stopColor="#c9a84c"/><stop offset="65%" stopColor="#f0d070"/><stop offset="100%" stopColor="#9a7030"/></linearGradient>
-        <linearGradient id="weG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#3a2010"/><stop offset="100%" stopColor="#100600"/></linearGradient>
-        <clipPath id="wcc"><circle cx="100" cy="100" r="100"/></clipPath>
-      </defs>
-      <g clipPath="url(#wcc)">
-        <circle cx="100" cy="100" r="100" fill="url(#wbg)"/>
-        <circle cx="100" cy="150" r="75" fill="#c9a84c" fillOpacity=".05"/>
-        <path d="M20 200 L22 145 Q35 128 60 122 L80 118 Q100 114 120 118 L140 122 Q165 128 178 145 L180 200Z" fill="url(#wsG)"/>
-        <path d="M83 120 Q100 142 117 120" stroke="#2a2a2a" strokeWidth="1.2" fill="none"/>
-        <path d="M25 154 Q100 148 175 154 L175 162 Q100 156 25 162Z" fill="url(#wgS)"/>
-        <path d="M28 164 Q100 159 172 164 L172 166 Q100 161 28 166Z" fill="#c9a84c" fillOpacity=".4"/>
-        <path d="M89 109 Q89 128 100 130 Q111 128 111 109Z" fill="url(#wsk)"/>
-        <path d="M52 74 Q38 95 40 128 Q42 152 48 168 Q56 165 58 148 Q58 122 62 98Z" fill="url(#whG)"/>
-        <path d="M148 74 Q162 95 160 128 Q158 152 152 168 Q144 165 142 148 Q142 122 138 98Z" fill="url(#whG)"/>
-        <ellipse cx="100" cy="84" rx="43" ry="47" fill="url(#wsk)"/>
-        <ellipse cx="62" cy="87" rx="11" ry="20" fill="#d8a888" fillOpacity=".22"/>
-        <ellipse cx="138" cy="87" rx="11" ry="20" fill="#d8a888" fillOpacity=".22"/>
-        <ellipse cx="73" cy="97" rx="13" ry="9" fill="url(#wcL)"/>
-        <ellipse cx="127" cy="97" rx="13" ry="9" fill="url(#wcR)"/>
-        <path d="M57 70 Q60 35 100 28 Q140 35 143 70 Q128 52 100 50 Q72 52 57 70Z" fill="url(#whG)"/>
-        <path d="M57 70 Q62 40 94 33 Q76 38 66 52 Q60 60 57 70Z" fill="#120900"/>
-        <path d="M73 71 Q81 67 90 69" stroke="#1e0e04" strokeWidth="2.8" fill="none" strokeLinecap="round"/>
-        <path d="M110 69 Q119 67 127 71" stroke="#1e0e04" strokeWidth="2.8" fill="none" strokeLinecap="round"/>
-        <ellipse cx="82" cy="83" rx="11.5" ry="8.5" fill="#f8f5f0"/>
-        <ellipse cx="118" cy="83" rx="11.5" ry="8.5" fill="#f8f5f0"/>
-        <circle cx="82" cy="84" r="7" fill="url(#weG)"/><circle cx="82" cy="84" r="5.5" fill="#281005"/>
-        <circle cx="118" cy="84" r="7" fill="url(#weG)"/><circle cx="118" cy="84" r="5.5" fill="#281005"/>
-        <circle cx="82" cy="84.5" r="3.2" fill="#040200"/><circle cx="118" cy="84.5" r="3.2" fill="#040200"/>
-        <circle cx="84.5" cy="81.5" r="2.2" fill="white" fillOpacity=".92"/><circle cx="120.5" cy="81.5" r="2.2" fill="white" fillOpacity=".92"/>
-        <path d="M71 80 Q82 75.5 93 80" stroke="#120800" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        <path d="M107 80 Q118 75.5 129 80" stroke="#120800" strokeWidth="2" fill="none" strokeLinecap="round"/>
-        {[[71,80,69,76],[76,77,74.5,73],[82,75.5,82,71],[88,77,89.5,73],[93,80,95,76]].map(([x1,y1,x2,y2],i)=><line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#080400" strokeWidth="1.4" strokeLinecap="round"/>)}
-        {[[107,80,105,76],[112,77,110.5,73],[118,75.5,118,71],[124,77,125.5,73],[129,80,131,76]].map(([x1,y1,x2,y2],i)=><line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#080400" strokeWidth="1.4" strokeLinecap="round"/>)}
-        <path d="M97 89 Q95 99 93 102 Q97 106 100 105 Q103 106 107 102 Q105 99 103 89" stroke="#d8a888" strokeWidth="1.3" fill="none" strokeOpacity=".65" strokeLinecap="round"/>
-        <path d="M88 112 Q93 108 100 110.5 Q107 108 112 112 Q107 114 100 113 Q93 114 88 112Z" fill="#c06878"/>
-        <path d="M88 112 Q94 121 100 122 Q106 121 112 112 Q107 114 100 113 Q93 114 88 112Z" fill="#d07888"/>
-        <ellipse cx="100" cy="117" rx="5.5" ry="2.5" fill="#f0a0b0" fillOpacity=".4"/>
-        <ellipse cx="57" cy="90" rx="5" ry="7" fill="#f5cdb0"/>
-        <ellipse cx="143" cy="90" rx="5" ry="7" fill="#f5cdb0"/>
-        <circle cx="57" cy="97" r="3.5" fill="#c9a84c"/><circle cx="57" cy="97" r="2" fill="#f0d070"/>
-        <circle cx="143" cy="97" r="3.5" fill="#c9a84c"/><circle cx="143" cy="97" r="2" fill="#f0d070"/>
-        <path d="M87 127 Q100 133 113 127" stroke="#c9a84c" strokeWidth="1.5" fill="none" strokeOpacity=".65"/>
-        <circle cx="100" cy="100" r="98" fill="none" stroke="#c9a84c" strokeWidth="2.5" strokeOpacity=".35"/>
-      </g>
-    </svg>
+    <img
+      src="/mia-avatar.jpg"
+      alt="MIA"
+      width={size}
+      height={size}
+      style={{
+        borderRadius: "50%",
+        display: "block",
+        flexShrink: 0,
+        objectFit: "cover",
+        objectPosition: "center top",
+        border: "2px solid #c9a84c",
+        ...style
+      }}
+    />
   );
 }
 
