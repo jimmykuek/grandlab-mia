@@ -1,12 +1,51 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 
+// ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY;
+
+function getHeaders() {
+  const headers = { "Content-Type": "application/json", "Prefer": "return=minimal" };
+  if (SUPABASE_KEY && SUPABASE_KEY.startsWith("sb_publishable_")) {
+    headers["Authorization"] = `Bearer ${SUPABASE_KEY}`;
+    headers["apikey"] = SUPABASE_KEY;
+  } else {
+    headers["apikey"] = SUPABASE_KEY;
+    headers["Authorization"] = `Bearer ${SUPABASE_KEY}`;
+  }
+  return headers;
+}
+
+async function dbGet(id) {
+  try {
+    const base = SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "");
+    const res = await fetch(`${base}/rest/v1/mia_knowledge?id=eq.${id}&select=data`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows?.[0]?.data || null;
+  } catch { return null; }
+}
+
+async function dbSet(id, data) {
+  try {
+    const base = SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "");
+    await fetch(`${base}/rest/v1/mia_knowledge?id=eq.${id}`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ data, updated_at: new Date().toISOString() })
+    });
+  } catch {}
+}
+
 // ─── ADMIN CREDENTIALS ──────────────────────────────────────────────────────
 // These are checked against env vars on the server. 
 // For the client side, we just store the hashed session.
 const ADMIN_USERS = [
   { username: "grandlab.admin", password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "MIA@2024gl" },
-  { username: "jimmy", password: process.env.NEXT_PUBLIC_JIMMY_PASSWORD || "Gldetailing2019" },
+  { username: "jimmy", password: process.env.NEXT_PUBLIC_JIMMY_PASSWORD || "GL@jimmy88" },
 ];
 
 // ─── SERVICE CATEGORIES ─────────────────────────────────────────────────────
@@ -28,6 +67,7 @@ const DEFAULT_KB = {
   salestalkPdfText: "",
   services: { ppf:"", wrap:"", coating:"", polish:"", detailing:"", tint:"" },
   faq: "Q: Ceramic how long?\nA: Basic 1yr, Pro 3yr, Graphene 5yr.\n\nQ: PPF vs Ceramic?\nA: PPF = physical. Ceramic = chemical/shine. Best = both.\n\nQ: After tint wind down window?\nA: Wait 3-5 days.\n\nQ: Got warranty?\nA: Yes — all services.\n\nQ: Hours?\nA: Mon–Sat 9am–6pm.",
+  miaInstructions: `GRANDLAB MIA — PERSONALIZED INSTRUCTIONS\n\nBrand name: Grandlab Detailing\nAssistant name: MIA\nLocation: [Add your address here]\nOperating hours: Monday–Saturday, 9am–6pm\nContact: [Add your WhatsApp number]\n\nTONE & PERSONALITY:\n• Friendly, warm, like a knowledgeable friend\n• WhatsApp casual style — not corporate\n• Use emojis naturally 😊👌\n• Never pushy, always helpful\n• Honest — recommend what customer genuinely needs\n\nLANGUAGE RULES:\n• BM: Use real slang — la, ok je, jom, boleh, kan, nanti, roger\n• English: Warm and natural, 3-4 lines max\n• Chinese: Friendly Mandarin, not formal\n\nALWAYS:\n• Ask for car model before recommending\n• Offer free inspection to close\n• End with a question to keep conversation going\n• Mention warranty when relevant\n\nNEVER:\n• Sound robotic or use corporate language\n• Give prices not in the knowledge base\n• Be pushy or aggressive`,
 };
 
 const SUGGESTIONS = [
@@ -77,21 +117,60 @@ const CopyIcon = () => (
 // ─── MIA AVATAR ─────────────────────────────────────────────────────────────
 function MIAAvatar({ size = 80, style = {} }) {
   return (
-    <img
-      src="/mia-avatar.jpg"
-      alt="MIA"
-      width={size}
-      height={size}
-      style={{
-        borderRadius: "50%",
-        display: "block",
-        flexShrink: 0,
-        objectFit: "cover",
-        objectPosition: "center top",
-        border: "2px solid #c9a84c",
-        ...style
-      }}
-    />
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ borderRadius:"50%", display:"block", flexShrink:0, ...style }}>
+      <defs>
+        <radialGradient id="wbg"><stop offset="0%" stopColor="#1a1a0f"/><stop offset="100%" stopColor="#0d0d0d"/></radialGradient>
+        <radialGradient id="wsk" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fde8d8"/><stop offset="100%" stopColor="#f5cdb0"/></radialGradient>
+        <radialGradient id="wcL" cx="30%" cy="60%" r="40%"><stop offset="0%" stopColor="#f9a0b0" stopOpacity=".45"/><stop offset="100%" stopColor="#f9a0b0" stopOpacity="0"/></radialGradient>
+        <radialGradient id="wcR" cx="70%" cy="60%" r="40%"><stop offset="0%" stopColor="#f9a0b0" stopOpacity=".45"/><stop offset="100%" stopColor="#f9a0b0" stopOpacity="0"/></radialGradient>
+        <radialGradient id="whG" cx="50%" cy="0%" r="80%"><stop offset="0%" stopColor="#2a1a08"/><stop offset="100%" stopColor="#0d0800"/></radialGradient>
+        <linearGradient id="wsG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1c1c1c"/><stop offset="100%" stopColor="#080808"/></linearGradient>
+        <linearGradient id="wgS" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7a5010"/><stop offset="30%" stopColor="#c9a84c"/><stop offset="65%" stopColor="#f0d070"/><stop offset="100%" stopColor="#9a7030"/></linearGradient>
+        <linearGradient id="weG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#3a2010"/><stop offset="100%" stopColor="#100600"/></linearGradient>
+        <clipPath id="wcc"><circle cx="100" cy="100" r="100"/></clipPath>
+      </defs>
+      <g clipPath="url(#wcc)">
+        <circle cx="100" cy="100" r="100" fill="url(#wbg)"/>
+        <circle cx="100" cy="150" r="75" fill="#c9a84c" fillOpacity=".05"/>
+        <path d="M20 200 L22 145 Q35 128 60 122 L80 118 Q100 114 120 118 L140 122 Q165 128 178 145 L180 200Z" fill="url(#wsG)"/>
+        <path d="M83 120 Q100 142 117 120" stroke="#2a2a2a" strokeWidth="1.2" fill="none"/>
+        <path d="M25 154 Q100 148 175 154 L175 162 Q100 156 25 162Z" fill="url(#wgS)"/>
+        <path d="M28 164 Q100 159 172 164 L172 166 Q100 161 28 166Z" fill="#c9a84c" fillOpacity=".4"/>
+        <path d="M89 109 Q89 128 100 130 Q111 128 111 109Z" fill="url(#wsk)"/>
+        <path d="M52 74 Q38 95 40 128 Q42 152 48 168 Q56 165 58 148 Q58 122 62 98Z" fill="url(#whG)"/>
+        <path d="M148 74 Q162 95 160 128 Q158 152 152 168 Q144 165 142 148 Q142 122 138 98Z" fill="url(#whG)"/>
+        <ellipse cx="100" cy="84" rx="43" ry="47" fill="url(#wsk)"/>
+        <ellipse cx="62" cy="87" rx="11" ry="20" fill="#d8a888" fillOpacity=".22"/>
+        <ellipse cx="138" cy="87" rx="11" ry="20" fill="#d8a888" fillOpacity=".22"/>
+        <ellipse cx="73" cy="97" rx="13" ry="9" fill="url(#wcL)"/>
+        <ellipse cx="127" cy="97" rx="13" ry="9" fill="url(#wcR)"/>
+        <path d="M57 70 Q60 35 100 28 Q140 35 143 70 Q128 52 100 50 Q72 52 57 70Z" fill="url(#whG)"/>
+        <path d="M57 70 Q62 40 94 33 Q76 38 66 52 Q60 60 57 70Z" fill="#120900"/>
+        <path d="M73 71 Q81 67 90 69" stroke="#1e0e04" strokeWidth="2.8" fill="none" strokeLinecap="round"/>
+        <path d="M110 69 Q119 67 127 71" stroke="#1e0e04" strokeWidth="2.8" fill="none" strokeLinecap="round"/>
+        <ellipse cx="82" cy="83" rx="11.5" ry="8.5" fill="#f8f5f0"/>
+        <ellipse cx="118" cy="83" rx="11.5" ry="8.5" fill="#f8f5f0"/>
+        <circle cx="82" cy="84" r="7" fill="url(#weG)"/><circle cx="82" cy="84" r="5.5" fill="#281005"/>
+        <circle cx="118" cy="84" r="7" fill="url(#weG)"/><circle cx="118" cy="84" r="5.5" fill="#281005"/>
+        <circle cx="82" cy="84.5" r="3.2" fill="#040200"/><circle cx="118" cy="84.5" r="3.2" fill="#040200"/>
+        <circle cx="84.5" cy="81.5" r="2.2" fill="white" fillOpacity=".92"/><circle cx="120.5" cy="81.5" r="2.2" fill="white" fillOpacity=".92"/>
+        <path d="M71 80 Q82 75.5 93 80" stroke="#120800" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <path d="M107 80 Q118 75.5 129 80" stroke="#120800" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        {[[71,80,69,76],[76,77,74.5,73],[82,75.5,82,71],[88,77,89.5,73],[93,80,95,76]].map(([x1,y1,x2,y2],i)=><line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#080400" strokeWidth="1.4" strokeLinecap="round"/>)}
+        {[[107,80,105,76],[112,77,110.5,73],[118,75.5,118,71],[124,77,125.5,73],[129,80,131,76]].map(([x1,y1,x2,y2],i)=><line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#080400" strokeWidth="1.4" strokeLinecap="round"/>)}
+        <path d="M97 89 Q95 99 93 102 Q97 106 100 105 Q103 106 107 102 Q105 99 103 89" stroke="#d8a888" strokeWidth="1.3" fill="none" strokeOpacity=".65" strokeLinecap="round"/>
+        <path d="M88 112 Q93 108 100 110.5 Q107 108 112 112 Q107 114 100 113 Q93 114 88 112Z" fill="#c06878"/>
+        <path d="M88 112 Q94 121 100 122 Q106 121 112 112 Q107 114 100 113 Q93 114 88 112Z" fill="#d07888"/>
+        <ellipse cx="100" cy="117" rx="5.5" ry="2.5" fill="#f0a0b0" fillOpacity=".4"/>
+        <ellipse cx="57" cy="90" rx="5" ry="7" fill="#f5cdb0"/>
+        <ellipse cx="143" cy="90" rx="5" ry="7" fill="#f5cdb0"/>
+        <circle cx="57" cy="97" r="3.5" fill="#c9a84c"/><circle cx="57" cy="97" r="2" fill="#f0d070"/>
+        <circle cx="143" cy="97" r="3.5" fill="#c9a84c"/><circle cx="143" cy="97" r="2" fill="#f0d070"/>
+        <path d="M87 127 Q100 133 113 127" stroke="#c9a84c" strokeWidth="1.5" fill="none" strokeOpacity=".65"/>
+        <circle cx="100" cy="100" r="98" fill="none" stroke="#c9a84c" strokeWidth="2.5" strokeOpacity=".35"/>
+      </g>
+    </svg>
   );
 }
 
@@ -320,7 +399,52 @@ export default function MIAApp() {
   const bottomRef = useRef();
   const taRef = useRef();
 
-  const [kb, setKb] = useState(DEFAULT_KB);
+  // KB state — loads from Supabase on mount
+  const [kb, setKbState] = useState(DEFAULT_KB);
+  const [mediaFiles, setMediaFilesState] = useState([]);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState(""); // "saving" | "saved" | "error"
+
+  // Load from Supabase on mount
+  useEffect(() => {
+    async function loadFromDB() {
+      setDbLoading(true);
+      try {
+        const [kbData, mediaData] = await Promise.all([dbGet("kb"), dbGet("media")]);
+        if (kbData && Object.keys(kbData).length > 0) {
+          setKbState(prev => ({ ...prev, ...kbData }));
+        }
+        if (mediaData && Array.isArray(mediaData)) {
+          setMediaFilesState(mediaData);
+        }
+      } catch {}
+      setDbLoading(false);
+    }
+    loadFromDB();
+  }, []);
+
+  // setKb — updates state + saves to Supabase
+  const setKb = (updater) => {
+    setKbState(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      setSaveStatus("saving");
+      dbSet("kb", next).then(() => setSaveStatus("saved")).catch(() => setSaveStatus("error"));
+      setTimeout(() => setSaveStatus(""), 3000);
+      return next;
+    });
+  };
+
+  // setMediaFiles — updates state + saves to Supabase
+  const setMediaFiles = (updater) => {
+    setMediaFilesState(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      setSaveStatus("saving");
+      dbSet("media", next).then(() => setSaveStatus("saved")).catch(() => setSaveStatus("error"));
+      setTimeout(() => setSaveStatus(""), 3000);
+      return next;
+    });
+  };
+
   const [kbTab, setKbTab] = useState("services");
   const [editingService, setEditingService] = useState(null);
   const [serviceDraft, setServiceDraft] = useState("");
@@ -328,7 +452,6 @@ export default function MIAApp() {
   const [stDraft, setStDraft] = useState("");
   const [stMode, setStMode] = useState("write");
 
-  const [mediaFiles, setMediaFiles] = useState([]);
   const mediaRef = useRef();
   const pdfRef = useRef();
 
@@ -394,6 +517,8 @@ export default function MIAApp() {
       : "Conversation is in the MIDDLE — build value and keep them engaged.";
 
     return `You are MIA, Grandlab Detailing's AI Sales Assistant. You sound like a real, warm human — WhatsApp style. NOT robotic, NOT corporate.
+
+${kb.miaInstructions ? `PERSONALIZED INSTRUCTIONS FROM GRANDLAB ADMIN:\n${kb.miaInstructions}\n` : ""}
 
 GRANDLAB KNOWLEDGE:
 ${svcKnowledge || "[No service knowledge added yet — admin can add in Knowledge Base]"}
@@ -666,7 +791,10 @@ TONE RULES — sound like a real person:
             <div style={{fontSize:12.5,fontWeight:600,color:"#e0d8cc"}}>MIA</div>
             <div style={{fontSize:9,color:"#4cbc70"}}>● Online · Grandlab</div>
           </div>
-          <div style={{marginLeft:"auto"}}>
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8}}>
+            {saveStatus==="saving" && <span style={{fontSize:10,color:"#c9a84c"}}>⏳ Saving...</span>}
+            {saveStatus==="saved" && <span style={{fontSize:10,color:"#4cbc70"}}>✓ Saved</span>}
+            {saveStatus==="error" && <span style={{fontSize:10,color:"#e05a54"}}>⚠️ Save failed</span>}
             {adminAuth
               ? <span style={{fontSize:10,color:"#4cbc70",background:"#081408",padding:"2px 9px",borderRadius:9,border:"1px solid #143014"}}>✓ Admin Mode</span>
               : <span style={{fontSize:10,color:"#3a3a3a"}}>Sales Advisor</span>
@@ -776,7 +904,8 @@ TONE RULES — sound like a real person:
               <div style={{display:"flex",gap:6,marginBottom:18,flexWrap:"wrap"}}>
                 {[{id:"services",label:"🔧 Services",color:"#4cbc90"},
                   {id:"salestalk",label:"💬 Sales Talk",color:"#7c9fd4"},
-                  {id:"faq",label:"❓ FAQ",color:"#d47ca0"}].map(tab => (
+                  {id:"faq",label:"❓ FAQ",color:"#d47ca0"},
+                  {id:"instructions",label:"⚙️ MIA Instructions",color:"#e8a020"}].map(tab => (
                   <button key={tab.id} className="cb" onClick={()=>setKbTab(tab.id)}
                     style={{padding:"6px 14px",borderRadius:18,
                       border:`1px solid ${kbTab===tab.id?tab.color:"#1a1a1a"}`,
@@ -938,6 +1067,29 @@ TONE RULES — sound like a real person:
                       resize:"vertical",outline:"none",lineHeight:1.75}}/>
                 </div>
               )}
+
+              {/* MIA INSTRUCTIONS */}
+              {kbTab==="instructions" && (
+                <div style={{maxWidth:700}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                    <span style={{fontSize:20}}>⚙️</span>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:600,color:"#e8a020"}}>MIA Personalized Instructions</div>
+                      <div style={{fontSize:11,color:"#484848"}}>Tell MIA exactly how to behave, what tone to use, and any specific rules for Grandlab</div>
+                    </div>
+                  </div>
+                  <div style={{background:"#0a0800",border:"1px solid #e8a02033",borderRadius:8,padding:"10px 14px",marginBottom:12,fontSize:12,color:"#a07820",lineHeight:1.7}}>
+                    💡 Everything you write here becomes MIA's core personality and behavior rules. Be as specific as you want — pricing rules, tone, what to say or not say, your shop address, operating hours, etc.
+                  </div>
+                  <textarea value={kb.miaInstructions||""} onChange={e=>setKb(p=>({...p,miaInstructions:e.target.value}))}
+                    style={{width:"100%",minHeight:500,background:"#060600",border:"1px solid #e8a02033",
+                      borderRadius:9,padding:13,color:"#d0ccc4",fontSize:12,fontFamily:"monospace",
+                      resize:"vertical",outline:"none",lineHeight:1.85}}
+                    placeholder={"Write your custom instructions for MIA here...\n\nExamples:\n• Our shop is located at [address]\n• Operating hours: Mon-Sat 9am-6pm\n• Always greet customer by name if known\n• Never offer more than 10% discount\n• Always mention our warranty\n• Our WhatsApp: 01X-XXXXXXX\n• Preferred closing line: Jom singgah workshop kami!"}
+                  />
+                  <div style={{marginTop:8,fontSize:11,color:"#383838"}}>Changes apply immediately to all new MIA replies.</div>
+                </div>
+              )}
             </div>
           ) : <LockedScreen onLogin={()=>setShowLogin(true)}/>
         )}
@@ -989,6 +1141,15 @@ TONE RULES — sound like a real person:
           ) : <LockedScreen onLogin={()=>setShowLogin(true)}/>
         )}
       </div>
+
+      {/* DB LOADING OVERLAY */}
+      {dbLoading && (
+        <div style={{position:"fixed",inset:0,background:"#0d0d0ddd",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:300,gap:16}}>
+          <div style={{width:56,height:56,borderRadius:"50%",border:"3px solid #1e1e1e",borderTop:"3px solid #c9a84c",animation:"spin 0.8s linear infinite"}}/>
+          <div style={{fontSize:13,color:"#c9a84c"}}>Loading MIA knowledge...</div>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      )}
 
       {/* LOGIN MODAL */}
       {showLogin && (
