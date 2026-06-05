@@ -45,7 +45,7 @@ async function dbSet(id, data) {
 // For the client side, we just store the hashed session.
 const ADMIN_USERS = [
   { username: "grandlab.admin", password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "MIA@2024gl" },
-  { username: "jimmy", password: process.env.NEXT_PUBLIC_JIMMY_PASSWORD || "GL@jimmy88" },
+  { username: "jimmy", password: process.env.NEXT_PUBLIC_JIMMY_PASSWORD || "Gldetailing2019" },
 ];
 
 // ─── SERVICE CATEGORIES ─────────────────────────────────────────────────────
