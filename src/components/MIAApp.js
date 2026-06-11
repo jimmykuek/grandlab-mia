@@ -40,6 +40,27 @@ async function dbSet(id, data) {
   } catch {}
 }
 
+// ─── HUB SSO: look up a staff member in gp_staff (shared with the Grandpride Hub) ──
+// Returns { username, name, role, apps } for the given username, or null if not found.
+async function dbGetStaff(username) {
+  try {
+    const base = SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "");
+    const u = encodeURIComponent(username);
+    const res = await fetch(
+      `${base}/rest/v1/gp_staff?username=eq.${u}&select=username,name,role,apps`,
+      { headers: getHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const row = rows?.[0];
+    if (!row) return null;
+    // apps may come back as an array or a JSON string — normalise to an array
+    let apps = row.apps;
+    if (!Array.isArray(apps)) { try { apps = apps ? JSON.parse(apps) : []; } catch { apps = []; } }
+    return { username: row.username, name: row.name, role: row.role, apps };
+  } catch { return null; }
+}
+
 // ─── ADMIN CREDENTIALS ──────────────────────────────────────────────────────
 // These are checked against env vars on the server. 
 // For the client side, we just store the hashed session.
@@ -338,8 +359,46 @@ function needsContext(q) {
   return isSituation && !hasContext;
 }
 
+// ─── HUB ACCESS GATE ─────────────────────────────────────────────────────────
+// Shown full-screen while checking, or when access is denied / no user supplied.
+function AccessGate({ state, name }) {
+  // state: "checking" | "denied" | "nouser"
+  const title =
+    state === "checking" ? "Checking access…" :
+    state === "nouser"   ? "Open MIA from the Hub" :
+                           "MIA is locked";
+  const body =
+    state === "checking" ? "One moment while we verify your access." :
+    state === "nouser"   ? "Please open MIA from the Grandpride Hub so we can verify who you are." :
+                           (name ? `Hi ${name} — your account doesn't have MIA access yet.` : "Your account doesn't have MIA access yet.");
+  return (
+    <div style={{ minHeight:"100dvh", display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center", gap:18, padding:40,
+      background:"#0d0d0d", color:"#e0d8cc", fontFamily:"system-ui, sans-serif" }}>
+      <div style={{ width:74, height:74, borderRadius:"50%", background:"#0f0f0f",
+        border:"1px solid #1e1e1e", display:"flex", alignItems:"center",
+        justifyContent:"center", fontSize:32 }}>
+        {state === "checking" ? "⏳" : "🔒"}
+      </div>
+      <div style={{ textAlign:"center", maxWidth:340 }}>
+        <div style={{ fontSize:17, fontWeight:700, marginBottom:10 }}>{title}</div>
+        <div style={{ fontSize:13, color:"#9a8f7e", lineHeight:1.7 }}>{body}</div>
+        {state === "denied" && (
+          <div style={{ fontSize:13, color:"#c9a84c", lineHeight:1.7, marginTop:12, fontWeight:600 }}>
+            Please ask your Head of Department to unlock MIA access.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 export default function MIAApp() {
+  // Hub SSO gate: "checking" until verified, then "ok" / "denied" / "nouser"
+  const [access, setAccess] = useState("checking");
+  const [hubUser, setHubUser] = useState(null); // { username, name, role, apps }
+
   const [adminAuth, setAdminAuth] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [loginUser, setLoginUser] = useState("");
@@ -365,6 +424,24 @@ export default function MIAApp() {
   const [mediaFiles, setMediaFilesState] = useState([]);
   const [dbLoading, setDbLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState(""); // "saving" | "saved" | "error"
+
+  // Hub SSO: read ?u=<username> on load and verify against gp_staff
+  useEffect(() => {
+    async function checkAccess() {
+      let username = null;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        username = params.get("u");
+      } catch {}
+      if (!username) { setAccess("nouser"); return; }
+      const staff = await dbGetStaff(username);
+      if (!staff) { setAccess("denied"); return; }
+      const allowed = staff.role === "Admin" || (Array.isArray(staff.apps) && staff.apps.includes("mia"));
+      setHubUser(staff);
+      setAccess(allowed ? "ok" : "denied");
+    }
+    checkAccess();
+  }, []);
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -667,6 +744,11 @@ TONE RULES — sound like a real person:
     {key:"middle",label:"🟡 Middle",color:"#c9a84c",desc:"Build interest"},
     {key:"end",label:"🔴 Close",color:"#e05a54",desc:"Book them in"},
   ];
+
+  // Hub SSO gate — block the app until access is verified
+  if (access !== "ok") {
+    return <AccessGate state={access} name={hubUser?.name} />;
+  }
 
   return (
     <div style={{display:"flex",height:"100vh",background:"#0d0d0d",
