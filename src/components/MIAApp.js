@@ -420,7 +420,18 @@ export default function MIAApp() {
   const [loginErr, setLoginErr] = useState("");
 
   const [view, setView] = useState("chat");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(typeof window!=="undefined" && window.innerWidth <= 768);
+  const [sidebarOpen, setSidebarOpen] = useState(!(typeof window!=="undefined" && window.innerWidth <= 768));
+
+  useEffect(() => {
+    function onResize(){
+      const m = window.innerWidth <= 768;
+      setIsMobile(m);
+      setSidebarOpen(prev => m ? false : true);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -531,6 +542,7 @@ export default function MIAApp() {
     const id = Date.now();
     setConversations(p => [...p, {id, title:"New Chat", msgs:[]}]);
     setActiveChatId(id); setMessages([]);
+    if(isMobile) setSidebarOpen(false);
   };
 
   const handleMediaUpload = e => {
@@ -778,8 +790,16 @@ TONE RULES — sound like a real person:
       `}</style>
 
       {/* SIDEBAR */}
-      <div style={{width:sidebarOpen?236:0,transition:"width .25s ease",overflow:"hidden",
-        background:"#0b0b0b",borderRight:"1px solid #161616",display:"flex",flexDirection:"column",flexShrink:0}}>
+      {isMobile && sidebarOpen && (
+        <div onClick={()=>setSidebarOpen(false)}
+          style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:40}}/>
+      )}
+      <div style={isMobile
+        ? {position:"fixed",top:0,left:0,bottom:0,width:236,zIndex:41,
+           transform:sidebarOpen?"translateX(0)":"translateX(-100%)",transition:"transform .25s ease",
+           background:"#0b0b0b",borderRight:"1px solid #161616",display:"flex",flexDirection:"column"}
+        : {width:sidebarOpen?236:0,transition:"width .25s ease",overflow:"hidden",
+           background:"#0b0b0b",borderRight:"1px solid #161616",display:"flex",flexDirection:"column",flexShrink:0}}>
         <div style={{width:236,display:"flex",flexDirection:"column",height:"100%"}}>
           <div style={{padding:"14px 13px 11px",borderBottom:"1px solid #161616"}}>
             <div style={{display:"flex",alignItems:"center",gap:9}}>
@@ -799,7 +819,7 @@ TONE RULES — sound like a real person:
             {[["chat","💬","Chat with MIA"],
               ...(adminAuth ? [["kb","📋","Knowledge Base"],["media","🖼️","Media Library"]] : [])
             ].map(([v,icon,label]) => (
-              <div key={v} className="hbg" onClick={()=>setView(v)}
+              <div key={v} className="hbg" onClick={()=>{setView(v); if(isMobile) setSidebarOpen(false);}}
                 style={{padding:"7px 12px",cursor:"pointer",fontSize:11.5,
                   color:view===v?"#c9a84c":"#444",
                   borderLeft:view===v?"2px solid #c9a84c":"2px solid transparent",
@@ -842,7 +862,7 @@ TONE RULES — sound like a real person:
         <div style={{padding:"10px 15px",borderBottom:"1px solid #131313",display:"flex",
           alignItems:"center",gap:9,background:"#0d0d0d",flexShrink:0}}>
           <button onClick={()=>setSidebarOpen(p=>!p)}
-            style={{background:"none",border:"none",cursor:"pointer",color:"#343434",fontSize:17,padding:3,lineHeight:1}}>☰</button>
+            style={{background:"none",border:"none",cursor:"pointer",color:isMobile?"#c9a84c":"#343434",fontSize:isMobile?22:17,padding:3,lineHeight:1}}>☰</button>
           <MIAAvatar size={27}/>
           <div>
             <div style={{fontSize:12.5,fontWeight:600,color:"#e0d8cc"}}>MIA</div>
