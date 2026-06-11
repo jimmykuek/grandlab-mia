@@ -777,7 +777,7 @@ TONE RULES — sound like a real person:
   }
 
   return (
-    <div style={{display:"flex",height:"100vh",background:"#0d0d0d",
+    <div style={{display:"flex",height:"100dvh",background:"#0d0d0d",
       fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#d0ccc4",overflow:"hidden"}}>
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
@@ -934,7 +934,7 @@ TONE RULES — sound like a real person:
                 </div>
               )}
             </div>
-            <div style={{padding:"10px 18px 14px",background:"#0d0d0d",borderTop:"1px solid #131313",flexShrink:0}}>
+            <div style={{padding:"10px 18px 14px",paddingBottom:"calc(14px + env(safe-area-inset-bottom))",background:"#0d0d0d",borderTop:"1px solid #131313",flexShrink:0}}>
               {imgPreview && (
                 <div style={{maxWidth:740,margin:"0 auto 6px",display:"flex",alignItems:"center",gap:7}}>
                   <img src={imgPreview} alt="" style={{height:40,borderRadius:5,border:"1px solid #222"}}/>
