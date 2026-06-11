@@ -41,14 +41,28 @@ async function dbSet(id, data) {
 }
 
 // ─── HUB SSO: look up a staff member in gp_staff (shared with the Grandpride Hub) ──
+// The staff list lives in the HUB's Supabase project, which may be different from
+// MIA's own project. Set NEXT_PUBLIC_HUB_SUPABASE_URL / _KEY in Vercel to point at it.
+// If not set, falls back to MIA's own Supabase project.
+const HUB_SUPABASE_URL = process.env.NEXT_PUBLIC_HUB_SUPABASE_URL || SUPABASE_URL;
+const HUB_SUPABASE_KEY = process.env.NEXT_PUBLIC_HUB_SUPABASE_KEY || SUPABASE_KEY;
+
+function getHubHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "apikey": HUB_SUPABASE_KEY,
+    "Authorization": `Bearer ${HUB_SUPABASE_KEY}`,
+  };
+}
+
 // Returns { username, name, role, apps } for the given username, or null if not found.
 async function dbGetStaff(username) {
   try {
-    const base = SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "");
+    const base = HUB_SUPABASE_URL?.replace(/\/rest\/v1\/?$/, "");
     const u = encodeURIComponent(username);
     const res = await fetch(
       `${base}/rest/v1/gp_staff?username=eq.${u}&select=username,name,role,apps`,
-      { headers: getHeaders() }
+      { headers: getHubHeaders() }
     );
     if (!res.ok) return null;
     const rows = await res.json();
